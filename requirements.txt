@@ -1,3 +1,4 @@
 mcstatus==11.1.1
+Requests==2.32.3
 termcolor==2.5.0
 tqdm==4.66.4

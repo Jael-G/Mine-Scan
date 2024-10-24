@@ -2,7 +2,7 @@
 
 # Mine Scan - Multi-Threaded Minecraft Server Scanner
 
-A powerful and advanced multi-threaded Python Minecraft Server scanner. Retrieves server details such as version, player count, and latency. Supports scanning from a file containing *IP* ranges (specified by upper and lower bounds), individual *IP* addresses, or using CIDR notation to define ranges. Allows customization of threads, timeout, port and output file. 
+A powerful and advanced multi-threaded Python Minecraft Server scanner. Retrieves server details such as version, player count, and latency. Supports scanning from a file containing *IP* ranges (specified by upper and lower bounds), individual *IP* addresses, or using CIDR notation to define ranges. The tool allows customization of threads, timeout, port, and output file, and includes the option to send scan results via Discord webhook, enabling real-time monitoring from anywhere.
 
 ## Table of Contents
 - [Usage](#usage)
@@ -39,13 +39,19 @@ Timeout greatly impacts the speed since each thread must wait for the full timeo
 
 However, setting the timeout too low can lead to false timeouts, potentially missing responses from IPs that do have servers. Based on testing, a 2-second timeout results in minimal false timeouts. However, this can vary depending on factors such as connectivity and distance from the *IP* being scanned.
 
-The scan always outputs a JSON file containing the successfully scanned servers. This file is updated at the end of each range scan, so it's often better to divide large *IP* ranges into smaller segments for more efficient processing.
+The scan always outputs a JSON file containing the successfully scanned servers. This file is updated at the end of each range scan, so it's often better to divide large *IP* ranges into smaller segments for more efficient processing. These results can also be sent to a Discord webhook using the `-w` argument. However, note that using a webhook increases the time between scans slightly as it has to send the data via requests. 
 
 #### Example
 
 [![asciicast](https://asciinema.org/a/683526.svg)](https://asciinema.org/a/683526)
 
-**Note: Some emojis might not render properly in asciinema depending on your system**
+*Note: Some emojis might not render properly in asciinema depending on your system*
+
+#### Discord Webhook
+
+If a Discord webhook is specified the scan results will be automatically delivered to it. The embedded message looks as follows:
+
+![Discord webhook embed exmaple](/images/embed_example.png)
 
 # How It Works
 
@@ -55,7 +61,7 @@ The scan always outputs a JSON file containing the successfully scanned servers.
 - Current players and maximum players
 - Latency
 
-The program uses `tqdm` to display the progress per-range and `termcolor` to stylize everything. 
+The program uses `tqdm` to display the progress per-range, `termcolor` to stylize everything and `requests` to send the data to a Discord webhook if provided.
 
 # Installation
 To get started download the repository, install the necessary dependencies, and run the script:
