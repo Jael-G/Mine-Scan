@@ -49,7 +49,9 @@ A Discord webhook to send the data can be specified but *slightly* increases the
 
 #### Example
 
-[![asciicast](https://asciinema.org/a/683526.svg)](https://asciinema.org/a/683526)
+[![asciicast](https://asciinema.org/a/Q1AGTYzjKimuOqJeqDNUy6GGY.svg)](https://asciinema.org/a/Q1AGTYzjKimuOqJeqDNUy6GGY)
+
+After each range scan a summary of the results in the format `HITS|MISSES|TOTAL`.
 
 *Note: Some emojis might not render properly in asciinema depending on your system*
 
@@ -92,28 +94,43 @@ python3 -m pip install -r requirements.txt
 
 # Using IP Ranges File
 
-One of the standout features of ***Mine Scan*** is its ability to manage large files with *IP* ranges. Each range specifies a lower and upper *IP* address for scanning, and the program generates all possible IPs in between.
+One of the best features of ***Mine Scan*** is its ability to manage large files containing IP addresses. The program supports three different formats for each line:
 
-This functionality is particularly useful when using [databases](https://cable.ayra.ch/ip/) that provide lists of all public IPs for a specific country (or multiple countries) in the form of upper and lower *IP* ranges.
-
-The file should include only *IP* ranges, formatted as follows, with one range per line:
+- IP ranges – specified by lower and upper IP addresses separated with a space.
 
 ```
-lower_ip upper_ip
+8.8.8.1 8.8.8.254
 ```
 
-In the [example](#example) the ranges file was:
+- Specific IPs – a single IP address.
+
+```
+192.168.1.1
+```
+
+- CIDR ranges – a standard CIDR notation
+
+```
+192.168.0.0/24
+```
+
+The program generates all possible IP addresses for ranges and CIDR blocks. 
+
+In the [example](#example) the file used was the following:
 
 ```
 8.8.8.1 8.8.8.254
 8.8.4.1 8.8.4.254
+192.168.1.1
+192.168.0.0/24
 ```
+
 
 In testing, a file that contained 478 ranges (around 3.6 million total public IPs) took less than an hour to complete (with an extremely powerful CPU server and thousands of threads).
 
 # To-Do
 
-1. Implement option to allow single IPs and CIDR notation on a file of IP ranges (currently only allows lower and upper range separated by a space).
+1. ~~Implement option to allow single IPs and CIDR notation on a file of IP ranges (currently only allows lower and upper range separated by a space).~~ ✅
 
 2. Fix JSON formatting. Currently, it lacks the brackets (`[]`) at the start and end of the file in order to be a properly formatted JSON. 
 

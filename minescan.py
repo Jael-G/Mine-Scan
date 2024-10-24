@@ -36,7 +36,7 @@ def display_start_banner(args, ranges_amount=1):
 
     stats_string += f"\t🧵 Threads: {thread_num}\n\t⚓ Port: {args.port}\n\t⌛ Timeout: {args.timeout}\n"
 
-    if (args.webhook):
+    if args.webhook:
         stats_string += f"\t🪝 Webhook: Enabled\n"
     else:
         stats_string += f"\t🪝 Webhook: Disabled\n"
@@ -201,7 +201,6 @@ def parse_results(
         )
     )
 
-    
     if SEND_TO_WEBHOOK:
         response = webhook_manager.send_results(
             ip_range, total, len(hits_list), misses, hits_list
@@ -211,7 +210,7 @@ def parse_results(
             print(colored("📩 Sent to webhook", "light_cyan"))
         else:
             print(colored("❌ Request to webhook failed", "light_red"))
-        
+
     print()
 
     with open(output_filepath, "a") as json_file:
@@ -300,13 +299,21 @@ if __name__ == "__main__":
 
         with open(args.filepath, "r") as ranges_file:
             for line in ranges_file:
-                ip_range = tuple(line.split()[0:2])
-                print(
-                    colored(f"🔍 Scanning: {ip_range[0]} - {ip_range[1]}", "light_cyan")
-                )
+                ip_line = tuple(line.split()[0:2])
+
+                if len(ip_line) == 2:  # Lower and upper range
+                    ip_range = tuple(ip_line)
+                    print(
+                        colored(
+                            f"🔍 Scanning: {ip_range[0]} - {ip_range[1]}", "light_cyan"
+                        )
+                    )
+
+                elif len(ip_line) == 1: # IP or CIDR
+                    ip_range = ip_line[0]
+                    print(colored(f"🔍 Scanning: {ip_range}", "light_cyan"))
 
                 try:
-                    ip_range: tuple[str, str] = (ip_range[0], ip_range[1])
                     execute_thread_pool(ip_range, port, thread_num, timeout)
                 except Exception as e:
                     print(colored(f"Error scanning range: {e}\n", "light_red"))
