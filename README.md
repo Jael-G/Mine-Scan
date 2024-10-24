@@ -98,10 +98,11 @@ In testing when using a file that contained 478 ranges (around 3.6 million total
 
 # To-Do
 
-1. Implement option to allow single IPs and CIDR notation on a file of IP ranges (currently only allows lower and upper range separated by a space)
+1. Implement option to allow single IPs and CIDR notation on a file of IP ranges (currently only allows lower and upper range separated by a space).
 
 2. Fix JSON formatting. Currently, it lacks the brackets (`[]`) at the start and end of the file in order to be a properly formatted JSON. 
 
+3. Add Discord webhook implementation to send found servers directly. 
 
 # License
 
