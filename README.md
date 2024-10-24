@@ -18,7 +18,7 @@ A powerful and advanced multi-threaded Python Minecraft Server scanner. Retrieve
 To run the scan simply execute the script with `python3 minescan.py` and provide the necessary arguments (ensure you have installed the [requirements](#installation)). 
 
 ```
-usage: tool [-h] [--threads threads] [--timeout seconds] (--filepath filepath | --ip IP) [--port port] [--output output]
+usage: tool [-h] [--threads threads] [--timeout seconds] (--filepath filepath | --ip IP) [--port port] [--webhook webhook] [--output output]
 
 options:
   -h, --help                        show this help message and exit
@@ -27,6 +27,7 @@ options:
   --filepath filepath, -f filepath  IP ranges file path
   --ip IP, -i IP                    Single IP or CIDR to scan
   --port port, -p port              Minecraft server port (default=25565)
+  --webhook webhook, -w webhook     Discord Webhook
   --output output, -o output        Output filepath (default=results.json)
 
 Verify local laws before scanning and ensure you have permission to scan the network. Use at your own risk.
@@ -102,7 +103,7 @@ In testing when using a file that contained 478 ranges (around 3.6 million total
 
 2. Fix JSON formatting. Currently, it lacks the brackets (`[]`) at the start and end of the file in order to be a properly formatted JSON. 
 
-3. Add Discord webhook implementation to send found servers directly. 
+3. ~~Add Discord webhook implementation to send found servers directly.~~ ✅
 
 # License
 

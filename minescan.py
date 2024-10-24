@@ -1,13 +1,17 @@
 from mcstatus import JavaServer, status_response
 from multiprocessing.dummy import Pool as ThreadPool
-from tqdm import tqdm
-from termcolor import colored
 from os import get_terminal_size
+from termcolor import colored
+from tqdm import tqdm
 
-import ipaddress
-import time
-import json
 import argparse
+import ipaddress
+import json
+import time
+
+from webhook import WebhookManager
+
+SEND_TO_WEBHOOK = False
 
 
 # Prints banner at start
@@ -31,6 +35,11 @@ def display_start_banner(args, ranges_amount=1):
         stats_string += f"\t🎯 Total Ranges: {ranges_amount}\n"
 
     stats_string += f"\t🧵 Threads: {thread_num}\n\t⚓ Port: {args.port}\n\t⌛ Timeout: {args.timeout}\n"
+
+    if (args.webhook):
+        stats_string += f"\t🪝 Webhook: Enabled\n"
+    else:
+        stats_string += f"\t🪝 Webhook: Disabled\n"
 
     print(colored(banner_string, "light_red", attrs=["bold"]))
     print(colored(stats_string, "light_yellow"))
@@ -89,6 +98,14 @@ def parse_arguments() -> argparse.Namespace:
         help="Minecraft server port (default=25565)",
         default=25565,
         metavar="port",
+    )
+
+    arg_parser.add_argument(
+        "--webhook",
+        "-w",
+        help="Discord Webhook",
+        default=None,
+        metavar="webhook",
     )
 
     arg_parser.add_argument(
@@ -160,27 +177,45 @@ def generate_target_ips(ip_lower: str, ip_upper: str = None) -> list[str]:
     return [ip_lower]  # Return single IP
 
 
-def parse_results(results: list[dict], run_time: float) -> None:
+def parse_results(
+    ip_range: str | tuple[str, str], results: list[dict], run_time: float
+) -> None:
     """Parses and demonstrates the scan results
 
     Args:
+        ip_range (str | tuple[str, str]): Single IP, CIDR or lower and upper range
         results (list[dict]): List of all server data dicts
         run_time (float): Time to complete scan
     """
 
-    hits: list[dict] = [server_data for server_data in results if server_data != {}]
-    misses = len(results) - len(hits)
+    hits_list: list[dict] = [
+        server_data for server_data in results if server_data != {}
+    ]
+    misses = len(results) - len(hits_list)
     total = len(results)
 
     print(
         colored(
-            f"✅ Done → {len(hits)}|{misses}|{total} [{run_time:.2f}s]\n",
+            f"✅ Done → {len(hits_list)}|{misses}|{total} [{run_time:.2f}s]",
             "light_green",
         )
     )
 
+    
+    if SEND_TO_WEBHOOK:
+        response = webhook_manager.send_results(
+            ip_range, total, len(hits_list), misses, hits_list
+        )
+
+        if response == 204:
+            print(colored("📩 Sent to webhook", "light_cyan"))
+        else:
+            print(colored("❌ Request to webhook failed", "light_red"))
+        
+    print()
+
     with open(output_filepath, "a") as json_file:
-        for server_data in hits:
+        for server_data in hits_list:
             json_file.write(f"{json.dumps(server_data)}\n")
 
 
@@ -192,22 +227,28 @@ def count_lines(filepath: str) -> int:
 
     Returns:
         int: Amount of lines in the file
-    """    
+    """
     with open(filepath, "r") as ranges_file:
         return sum(1 for line in ranges_file)
 
 
 def execute_thread_pool(
-    target_ips: list[str], port: int, thread_num: int, timeout: float
+    ip_range: str | tuple[str, str], port: int, thread_num: int, timeout: float
 ) -> None:
     """Executes thread pool to scan a given IP range
 
     Args:
-        target_ips (list[str]): IPs to scan
+        ip_range (str | tuple[str, str]): Single IP, CIDR or lower and upper range
         port (int): Minecraft server port
         thread_num (int): Amount of threads for Pool
         timeout (float): Server scan timeout
     """
+
+    if type(ip_range) == str:
+        target_ips = generate_target_ips(ip_range)
+    else:
+        target_ips = generate_target_ips(ip_range[0], ip_range[1])
+
     pool = ThreadPool(thread_num)
 
     start_time = time.time()
@@ -232,7 +273,7 @@ def execute_thread_pool(
             pool.close()
             pool.join()
 
-    parse_results(results, run_time)
+    parse_results(ip_range, results, run_time)
 
 
 if __name__ == "__main__":
@@ -242,25 +283,30 @@ if __name__ == "__main__":
     port = int(args.port)
     output_filepath = args.output
 
+    if args.webhook:
+        webhook_manager = WebhookManager(args.webhook)
+        SEND_TO_WEBHOOK = True
 
-    if args.ip: # IP or CIDR
+    if args.ip:  # IP or CIDR
         display_start_banner(args)
         print(colored(f"🔍 Scanning: {args.ip}", "light_cyan"))
 
-        target_ips = generate_target_ips(args.ip)
-        execute_thread_pool(target_ips, port, thread_num, timeout)
+        ip_range = args.ip
+        execute_thread_pool(ip_range, port, thread_num, timeout)
 
-    else: # IP range File
+    else:  # IP range File
         ranges_amout = count_lines(args.filepath)
         display_start_banner(args, ranges_amout)
 
         with open(args.filepath, "r") as ranges_file:
             for line in ranges_file:
                 ip_range = tuple(line.split()[0:2])
-                print(colored(f"🔍 Scanning: {ip_range[0]} - {ip_range[1]}", "light_cyan"))
+                print(
+                    colored(f"🔍 Scanning: {ip_range[0]} - {ip_range[1]}", "light_cyan")
+                )
 
                 try:
-                    target_ips: list[str] = generate_target_ips(ip_range[0], ip_range[1])
-                    execute_thread_pool(target_ips, port, thread_num, timeout)
+                    ip_range: tuple[str, str] = (ip_range[0], ip_range[1])
+                    execute_thread_pool(ip_range, port, thread_num, timeout)
                 except Exception as e:
-                    print(colored(f"Error scanning range: {e}\n", 'light_red'))
+                    print(colored(f"Error scanning range: {e}\n", "light_red"))
