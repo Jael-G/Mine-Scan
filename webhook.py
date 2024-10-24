@@ -48,7 +48,7 @@ class WebhookManager:
                     "url": "https://github.com/Jael-G/Mine-Scan",
                 }
             ],
-            "avatar_url": "https://github.com/Jael-G/Mine-Scan/blob/main/images/mine_scan_whook_logo.png",
+            "avatar_url": "https://github.com/Jael-G/Mine-Scan/blob/bd4ad785c8eee9d6c84b399906122a524fe0480b/images/mine_scan_whook_logo.png?raw=true",
             "username": "Mine Scan",
         }
 
